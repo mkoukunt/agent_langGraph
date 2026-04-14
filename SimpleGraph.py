@@ -1,3 +1,4 @@
+import sys
 from typing import TypedDict
 
 import requests
@@ -39,6 +40,8 @@ def calc_url(state:PortfolioState) ->PortfolioState:
 
 def calc_reasoning(state:PortfolioState) ->PortfolioState:
     question = input("Enter your question: ")
+    if question.lower() == 'quit':
+        sys.exit(0)
     #print(f"Hello, {question}!")
     # The URL of the API endpoint
     url = 'http://rabini.org:5000/generate'
@@ -59,29 +62,20 @@ def calc_data(state:PortfolioState) ->PortfolioState:
     # The URL of the API endpoint
     url=state['url'].split()[1]
     print(url)
-    matches = re.finditer(r"\{\w+\}", url)
-    while True:
-        match = re.search(r"\{\w+\}", url)
-        if not match:
-            break
-        if "server" in match.group():
-            url = url.replace(match.group(), "crexnmsdev1.solint.net")
-        else:
-            start, end = match.span()
-            tmp = url[start+1:end-1]
-            ans = input("Enter : " + tmp)
-            url = url.replace(match.group(), ans)
+    url="http://crexnmsdev1.solint.net/ns-api/v2"+url
+
 
     #url = 'https://crexnmsdev1.solint.net/ns-api/v2/domains/'+ domain+'/phones'
     print(url)
     headers = {
-        "Authorization": f"Bearer 21769fe6f8d3f3b44b3253aae249934c",
+        "Authorization": f"Bearer afe7898123842cd69e2577817eb78e44",
     }
     # Execute the GET request
     response = requests.get(url,headers=headers)
 
     # Convert the JSON response into a Python dictionary
     state['res'] = response.text
+    print(state['res'])
     return state
 
 builder=StateGraph(PortfolioState)
@@ -91,7 +85,8 @@ builder.add_node("calc_data_node",calc_data)
 builder.add_edge(START,"calc_reasoning_node")
 builder.add_edge("calc_reasoning_node","calc_url_node")
 builder.add_edge("calc_url_node","calc_data_node")
-builder.add_edge("calc_data_node",END)
+#builder.add_edge("calc_data_node",END)
+builder.add_edge("calc_data_node","calc_reasoning_node")
 
 graph=builder.compile()
 my_obj=graph.invoke(my_obj)
